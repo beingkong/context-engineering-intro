@@ -1,0 +1,56 @@
+# Core AI Models
+vllm==0.6.4.post1
+torch==2.5.1
+transformers==4.46.2
+accelerate==1.1.1
+numpy<2.0.0  # vLLM constraint
+
+# higgs-audio dependencies
+# Note: higgs-audio will be installed from source as per GitHub instructions
+soundfile==0.12.1
+librosa==0.10.2.post1
+phonemizer==3.3.0
+
+# Ollama integration
+ollama==0.4.5
+httpx>=0.27.0,<0.28.0  # ollama constraint
+pydantic==2.10.3
+pydantic-settings==2.6.1
+
+# Web Framework & WebSocket
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+websockets==13.1
+python-multipart==0.0.12
+jinja2==3.1.4
+
+# Audio Processing
+pyaudio==0.2.14
+wave==0.0.2
+webrtcvad==2.0.10
+scipy==1.14.1
+
+# Utilities
+python-dotenv==1.0.1
+loguru==0.7.3
+typer==0.13.1
+rich==13.9.4
+psutil==6.1.0
+nvidia-ml-py==12.560.30
+
+# Testing Framework
+pytest==8.3.4
+pytest-asyncio==0.24.0
+pytest-cov==6.0.0
+pytest-mock==3.14.0
+
+# Development Tools
+black==24.10.0
+ruff==0.8.4
+mypy==1.13.0
+pre-commit==4.0.1
+
+# Additional ML Libraries
+tokenizers==0.20.3
+datasets==3.1.0
+pillow==11.0.0

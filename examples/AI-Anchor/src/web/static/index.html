@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Anchor - Interactive Voice Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card h3 {
+            color: #5a67d8;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-connected { background: #48bb78; }
+        .status-disconnected { background: #f56565; }
+        .status-processing { background: #ed8936; }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-primary { background: #5a67d8; color: white; }
+        .btn-success { background: #48bb78; color: white; }
+        .btn-danger { background: #f56565; color: white; }
+        .btn-warning { background: #ed8936; color: white; }
+        .btn-secondary { background: #a0aec0; color: white; }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #5a67d8;
+            box-shadow: 0 0 0 3px rgba(90, 103, 216, 0.1);
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .input-group .form-control {
+            flex: 1;
+        }
+        
+        .messages {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            height: 300px;
+            overflow-y: auto;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        
+        .message {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border-left: 4px solid #cbd5e0;
+        }
+        
+        .message-transcription {
+            background: #e6fffa;
+            border-left-color: #38b2ac;
+        }
+        
+        .message-response {
+            background: #f0fff4;
+            border-left-color: #48bb78;
+        }
+        
+        .message-error {
+            background: #fed7d7;
+            border-left-color: #f56565;
+        }
+        
+        .message-system {
+            background: #ebf8ff;
+            border-left-color: #4299e1;
+        }
+        
+        .message-time {
+            color: #718096;
+            font-size: 11px;
+            margin-right: 8px;
+        }
+        
+        .message-type {
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 11px;
+            margin-right: 8px;
+        }
+        
+        .personality-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .personality-card {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .personality-card:hover {
+            border-color: #5a67d8;
+            background: #edf2f7;
+        }
+        
+        .personality-card.active {
+            border-color: #5a67d8;
+            background: #e6fffa;
+        }
+        
+        .personality-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .audio-controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .audio-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: none;
+            font-size: 2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .audio-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .record-btn {
+            background: #f56565;
+            color: white;
+        }
+        
+        .record-btn.recording {
+            background: #e53e3e;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: rgba(255,255,255,0.9);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #5a67d8;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            color: #718096;
+            margin-top: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                justify-content: center;
+            }
+            
+            .btn {
+                flex: 1;
+                min-width: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎙️ AI Anchor</h1>
+            <p>Interactive Voice Assistant with Multiple Personalities</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="card">
+                <h3>
+                    <span id="statusIndicator" class="status-indicator status-disconnected"></span>
+                    Connection & Status
+                </h3>
+                
+                <div class="controls">
+                    <button id="connectBtn" class="btn btn-primary" onclick="connect()">Connect</button>
+                    <button id="disconnectBtn" class="btn btn-danger" onclick="disconnect()" disabled>Disconnect</button>
+                    <button id="statusBtn" class="btn btn-secondary" onclick="getStatus()">Refresh</button>
+                </div>
+                
+                <div id="statusText">Click Connect to start</div>
+                
+                <div class="stats">
+                    <div class="stat-card">
+                        <div id="connectionTime" class="stat-value">--</div>
+                        <div class="stat-label">Connection Time</div>
+                    </div>
+                    <div class="stat-card">
+                        <div id="messageCount" class="stat-value">0</div>
+                        <div class="stat-label">Messages</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>🎭 Personality Control</h3>
+                
+                <div class="personality-grid">
+                    <div class="personality-card active" data-personality="professional">
+                        <div class="personality-icon">📺</div>
+                        <div>Professional</div>
+                    </div>
+                    <div class="personality-card" data-personality="friendly">
+                        <div class="personality-icon">😊</div>
+                        <div>Friendly</div>
+                    </div>
+                    <div class="personality-card" data-personality="energetic">
+                        <div class="personality-icon">⚡</div>
+                        <div>Energetic</div>
+                    </div>
+                    <div class="personality-card" data-personality="calm">
+                        <div class="personality-icon">🧘</div>
+                        <div>Calm</div>
+                    </div>
+                    <div class="personality-card" data-personality="authoritative">
+                        <div class="personality-icon">👑</div>
+                        <div>Authoritative</div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="languageSelect">Language</label>
+                    <select id="languageSelect" class="form-control">
+                        <option value="en">English</option>
+                        <option value="es">Español</option>
+                        <option value="fr">Français</option>
+                        <option value="de">Deutsch</option>
+                        <option value="it">Italiano</option>
+                        <option value="pt">Português</option>
+                    </select>
+                </div>
+                
+                <div class="controls">
+                    <button class="btn btn-success" onclick="changeLanguage()">Change Language</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h3>💬 Conversation</h3>
+            
+            <div class="controls">
+                <button id="startConversationBtn" class="btn btn-success" onclick="startConversation()">Start Conversation</button>
+                <button id="endConversationBtn" class="btn btn-danger" onclick="endConversation()" disabled>End Conversation</button>
+                <button class="btn btn-warning" onclick="abortResponse()">Abort Response</button>
+            </div>
+            
+            <div class="audio-controls">
+                <button id="recordBtn" class="audio-btn record-btn" onclick="toggleRecording()">
+                    🎤
+                </button>
+            </div>
+            
+            <div class="form-group">
+                <label for="textInput">Text Input</label>
+                <div class="input-group">
+                    <input type="text" id="textInput" class="form-control" placeholder="Type your message here...">
+                    <button class="btn btn-primary" onclick="sendText()">Send</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="messages">Messages</label>
+                <div id="messages" class="messages"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        class AIAnchorClient {
+            constructor() {
+                this.ws = null;
+                this.clientId = 'web-client-' + Math.random().toString(36).substr(2, 9);
+                this.isRecording = false;
+                this.mediaRecorder = null;
+                this.audioStream = null;
+                this.messageCount = 0;
+                this.connectionStartTime = null;
+                this.currentPersonality = 'professional';
+                
+                this.setupEventListeners();
+                this.updateConnectionTimer();
+            }
+            
+            setupEventListeners() {
+                // Personality selection
+                document.querySelectorAll('.personality-card').forEach(card => {
+                    card.addEventListener('click', () => {
+                        document.querySelectorAll('.personality-card').forEach(c => c.classList.remove('active'));
+                        card.classList.add('active');
+                        this.currentPersonality = card.dataset.personality;
+                        this.changePersonality(this.currentPersonality);
+                    });
+                });
+                
+                // Enter key for text input
+                document.getElementById('textInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendText();
+                    }
+                });
+                
+                // Connection timer update
+                setInterval(() => this.updateConnectionTimer(), 1000);
+            }
+            
+            updateStatus(message, type = 'info') {
+                const statusText = document.getElementById('statusText');
+                const statusIndicator = document.getElementById('statusIndicator');
+                
+                statusText.textContent = message;
+                
+                statusIndicator.className = 'status-indicator ';
+                switch(type) {
+                    case 'connected':
+                        statusIndicator.classList.add('status-connected');
+                        break;
+                    case 'processing':
+                        statusIndicator.classList.add('status-processing');
+                        break;
+                    case 'error':
+                    case 'disconnected':
+                        statusIndicator.classList.add('status-disconnected');
+                        break;
+                }
+            }
+            
+            updateConnectionTimer() {
+                const timeElement = document.getElementById('connectionTime');
+                if (this.connectionStartTime) {
+                    const elapsed = Math.floor((Date.now() - this.connectionStartTime) / 1000);
+                    const minutes = Math.floor(elapsed / 60);
+                    const seconds = elapsed % 60;
+                    timeElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                } else {
+                    timeElement.textContent = '--';
+                }
+            }
+            
+            addMessage(type, data, messageType = 'info') {
+                const messages = document.getElementById('messages');
+                const messageDiv = document.createElement('div');
+                
+                const time = new Date().toLocaleTimeString();
+                const typeClass = `message-${messageType}`;
+                
+                let content = '';
+                if (typeof data === 'string') {
+                    content = data;
+                } else if (data && typeof data === 'object') {
+                    if (data.text) content = data.text;
+                    else if (data.chunk) content = data.chunk;
+                    else if (data.greeting) content = data.greeting;
+                    else if (data.error) content = data.error;
+                    else content = JSON.stringify(data, null, 2);
+                } else {
+                    content = String(data);
+                }
+                
+                messageDiv.className = `message ${typeClass}`;
+                messageDiv.innerHTML = `
+                    <span class="message-time">${time}</span>
+                    <span class="message-type">${type}</span>
+                    <span class="message-content">${content}</span>
+                `;
+                
+                messages.appendChild(messageDiv);
+                messages.scrollTop = messages.scrollHeight;
+                
+                this.messageCount++;
+                document.getElementById('messageCount').textContent = this.messageCount;
+            }
+            
+            connect() {
+                if (this.ws) return;
+                
+                this.updateStatus('Connecting...', 'processing');
+                
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = `${protocol}//${window.location.host}/ws/${this.clientId}`;
+                
+                this.ws = new WebSocket(wsUrl);
+                
+                this.ws.onopen = () => {
+                    this.updateStatus('Connected', 'connected');
+                    this.connectionStartTime = Date.now();
+                    
+                    document.getElementById('connectBtn').disabled = true;
+                    document.getElementById('disconnectBtn').disabled = false;
+                    
+                    this.addMessage('SYSTEM', 'Connected to AI Anchor', 'system');
+                };
+                
+                this.ws.onmessage = (event) => {
+                    const message = JSON.parse(event.data);
+                    this.handleMessage(message);
+                };
+                
+                this.ws.onclose = () => {
+                    this.updateStatus('Disconnected', 'disconnected');
+                    this.connectionStartTime = null;
+                    
+                    document.getElementById('connectBtn').disabled = false;
+                    document.getElementById('disconnectBtn').disabled = true;
+                    document.getElementById('startConversationBtn').disabled = false;
+                    document.getElementById('endConversationBtn').disabled = true;
+                    
+                    this.ws = null;
+                    this.addMessage('SYSTEM', 'Disconnected from AI Anchor', 'error');
+                };
+                
+                this.ws.onerror = (error) => {
+                    this.updateStatus('Connection Error', 'error');
+                    this.addMessage('ERROR', 'WebSocket connection error', 'error');
+                };
+            }
+            
+            disconnect() {
+                if (this.ws) {
+                    this.ws.close();
+                }
+                if (this.audioStream) {
+                    this.audioStream.getTracks().forEach(track => track.stop());
+                    this.audioStream = null;
+                }
+            }
+            
+            handleMessage(message) {
+                const { type, data } = message;
+                
+                switch(type) {
+                    case 'transcription':
+                        this.addMessage('TRANSCRIPTION', data, 'transcription');
+                        break;
+                    case 'response_start':
+                        this.addMessage('RESPONSE START', data, 'system');
+                        this.updateStatus('AI is responding...', 'processing');
+                        break;
+                    case 'response_chunk':
+                        this.addMessage('RESPONSE', data, 'response');
+                        break;
+                    case 'audio_output':
+                        this.playAudio(data);
+                        break;
+                    case 'session_complete':
+                        this.addMessage('SESSION COMPLETE', data, 'system');
+                        this.updateStatus('Ready for next input', 'connected');
+                        break;
+                    case 'error':
+                        this.addMessage('ERROR', data, 'error');
+                        this.updateStatus('Error occurred', 'error');
+                        break;
+                    case 'greeting':
+                        this.addMessage('GREETING', data, 'system');
+                        document.getElementById('startConversationBtn').disabled = true;
+                        document.getElementById('endConversationBtn').disabled = false;
+                        break;
+                    case 'personality_changed':
+                        this.addMessage('PERSONALITY CHANGED', data, 'system');
+                        break;
+                    case 'conversation_ended':
+                        this.addMessage('CONVERSATION ENDED', data, 'system');
+                        document.getElementById('startConversationBtn').disabled = false;
+                        document.getElementById('endConversationBtn').disabled = true;
+                        break;
+                    case 'status_update':
+                        if (data.connected) {
+                            this.updateStatus('Connected and ready', 'connected');
+                        }
+                        break;
+                    default:
+                        this.addMessage(type.toUpperCase(), data, 'system');
+                }
+            }
+            
+            sendMessage(type, data = {}) {
+                if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                    this.ws.send(JSON.stringify({ type, data }));
+                } else {
+                    this.addMessage('ERROR', 'Not connected to server', 'error');
+                }
+            }
+            
+            startConversation() {
+                const mode = 'casual_chat';
+                const language = document.getElementById('languageSelect').value;
+                
+                this.sendMessage('start_conversation', {
+                    mode: mode,
+                    personality: this.currentPersonality,
+                    language: language
+                });
+            }
+            
+            endConversation() {
+                this.sendMessage('end_conversation');
+            }
+            
+            changePersonality(personality) {
+                this.sendMessage('change_personality', { personality });
+            }
+            
+            changeLanguage() {
+                const language = document.getElementById('languageSelect').value;
+                this.sendMessage('change_language', { language });
+            }
+            
+            sendText() {
+                const input = document.getElementById('textInput');
+                const text = input.value.trim();
+                
+                if (text) {
+                    this.sendMessage('text_input', { text });
+                    this.addMessage('USER INPUT', text, 'system');
+                    input.value = '';
+                }
+            }
+            
+            abortResponse() {
+                this.sendMessage('abort_response');
+            }
+            
+            async toggleRecording() {
+                if (!this.isRecording) {
+                    await this.startRecording();
+                } else {
+                    this.stopRecording();
+                }
+            }
+            
+            async startRecording() {
+                try {
+                    this.audioStream = await navigator.mediaDevices.getUserMedia({ 
+                        audio: { 
+                            sampleRate: 24000,
+                            channelCount: 1,
+                            echoCancellation: true,
+                            noiseSuppression: true
+                        } 
+                    });
+                    
+                    this.mediaRecorder = new MediaRecorder(this.audioStream, {
+                        mimeType: 'audio/webm'
+                    });
+                    
+                    this.mediaRecorder.ondataavailable = (event) => {
+                        if (event.data.size > 0) {
+                            this.sendAudioChunk(event.data);
+                        }
+                    };
+                    
+                    this.mediaRecorder.start(100); // Send chunks every 100ms
+                    this.isRecording = true;
+                    
+                    const recordBtn = document.getElementById('recordBtn');
+                    recordBtn.classList.add('recording');
+                    recordBtn.textContent = '⏹️';
+                    
+                    this.addMessage('RECORDING', 'Voice recording started', 'system');
+                    
+                } catch (error) {
+                    this.addMessage('ERROR', `Microphone access denied: ${error.message}`, 'error');
+                }
+            }
+            
+            stopRecording() {
+                if (this.mediaRecorder && this.isRecording) {
+                    this.mediaRecorder.stop();
+                    this.isRecording = false;
+                    
+                    const recordBtn = document.getElementById('recordBtn');
+                    recordBtn.classList.remove('recording');
+                    recordBtn.textContent = '🎤';
+                    
+                    this.addMessage('RECORDING', 'Voice recording stopped', 'system');
+                }
+                
+                if (this.audioStream) {
+                    this.audioStream.getTracks().forEach(track => track.stop());
+                }
+            }
+            
+            async sendAudioChunk(blob) {
+                try {
+                    const arrayBuffer = await blob.arrayBuffer();
+                    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+                    
+                    this.sendMessage('audio_chunk', {
+                        audio_data: base64,
+                        format: 'webm'
+                    });
+                } catch (error) {
+                    console.error('Error sending audio chunk:', error);
+                }
+            }
+            
+            playAudio(audioData) {
+                try {
+                    const binaryString = atob(audioData.audio_data);
+                    const bytes = new Uint8Array(binaryString.length);
+                    for (let i = 0; i < binaryString.length; i++) {
+                        bytes[i] = binaryString.charCodeAt(i);
+                    }
+                    
+                    const blob = new Blob([bytes], { type: 'audio/wav' });
+                    const audioUrl = URL.createObjectURL(blob);
+                    const audio = new Audio(audioUrl);
+                    
+                    audio.play().catch(error => {
+                        console.error('Error playing audio:', error);
+                    });
+                    
+                    // Clean up URL after playing
+                    audio.onended = () => {
+                        URL.revokeObjectURL(audioUrl);
+                    };
+                } catch (error) {
+                    console.error('Error processing audio:', error);
+                }
+            }
+            
+            getStatus() {
+                this.sendMessage('get_status');
+            }
+        }
+        
+        // Global functions for backward compatibility
+        let aiClient = null;
+        
+        function connect() {
+            if (!aiClient) aiClient = new AIAnchorClient();
+            aiClient.connect();
+        }
+        
+        function disconnect() {
+            if (aiClient) aiClient.disconnect();
+        }
+        
+        function startConversation() {
+            if (aiClient) aiClient.startConversation();
+        }
+        
+        function endConversation() {
+            if (aiClient) aiClient.endConversation();
+        }
+        
+        function changeLanguage() {
+            if (aiClient) aiClient.changeLanguage();
+        }
+        
+        function sendText() {
+            if (aiClient) aiClient.sendText();
+        }
+        
+        function abortResponse() {
+            if (aiClient) aiClient.abortResponse();
+        }
+        
+        function toggleRecording() {
+            if (aiClient) aiClient.toggleRecording();
+        }
+        
+        function getStatus() {
+            if (aiClient) aiClient.getStatus();
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-connect after a short delay
+            setTimeout(() => {
+                if (!aiClient) {
+                    connect();
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
